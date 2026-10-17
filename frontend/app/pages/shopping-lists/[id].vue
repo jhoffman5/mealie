@@ -418,7 +418,6 @@ import { useShoppingListPage } from "~/composables/shopping-list-page/use-shoppi
 import { useLabelStore, useUnitStore, useFoodStore } from "~/composables/store";
 import { alert } from "~/composables/use-toast";
 import type { ShoppingListItemOut } from "~/lib/api/types/household";
-import type { RecipeSummary } from "~/lib/api/types/recipe";
 
 definePageMeta({
   middleware: ["auth"],
@@ -491,6 +490,9 @@ const {
   recipeList,
   removeRecipeReferenceToList,
   addRecipeReferenceToList,
+  addRecipeDialog,
+  selectedRecipe,
+  addSelectedRecipe,
   search,
   isSearching,
   isSearchOpen,
@@ -502,19 +504,6 @@ const {
   visibleCheckedCount,
   hasSearchResults,
 } = shoppingListPage;
-
-const addRecipeDialog = ref(false);
-const selectedRecipe = ref<RecipeSummary | null>(null);
-
-async function addSelectedRecipe() {
-  if (!selectedRecipe.value?.id) {
-    return;
-  }
-
-  await addRecipeReferenceToList(selectedRecipe.value.id);
-  addRecipeDialog.value = false;
-  selectedRecipe.value = null;
-}
 
 // Expand the checked section while searching, so an item that has already been
 // checked off can be found and unchecked without expanding the section by hand.

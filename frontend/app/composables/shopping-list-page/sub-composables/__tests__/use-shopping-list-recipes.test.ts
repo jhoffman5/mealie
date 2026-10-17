@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { ref } from "vue";
 import type { ShoppingListOut } from "~/lib/api/types/household";
+import type { RecipeSummary } from "~/lib/api/types/recipe";
 import { useShoppingListRecipes } from "../use-shopping-list-recipes";
 import { MOCK_SHOPPING_LIST } from "./mocks";
 
@@ -22,6 +23,9 @@ describe("use-shopping-list-recipes", () => {
   const {
     addRecipeReferenceToList,
     removeRecipeReferenceToList,
+    addRecipeDialog,
+    selectedRecipe,
+    addSelectedRecipe,
   } = useShoppingListRecipes(
     shoppingList,
     loadingCounter,
@@ -69,6 +73,34 @@ describe("use-shopping-list-recipes", () => {
       recipeReferenceLoading.value = true;
       await recipeUpdater("recipe_id");
       expect(mock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("adding the selected recipe", () => {
+    const recipe = { id: "recipe_id", name: "Recipe" } as RecipeSummary;
+
+    afterEach(() => {
+      addRecipeDialog.value = false;
+      selectedRecipe.value = null;
+    });
+
+    test("adds the selected recipe's ingredients and closes the dialog", async () => {
+      addRecipes.mockClear();
+      refresh.mockClear();
+      addRecipeDialog.value = true;
+      selectedRecipe.value = recipe;
+      await addSelectedRecipe();
+      expect(addRecipes).toHaveBeenCalledWith(list.id, [{ recipeId: "recipe_id" }]);
+      expect(refresh).toHaveBeenCalled();
+      expect(addRecipeDialog.value).toBe(false);
+      expect(selectedRecipe.value).toBeNull();
+    });
+    test("does nothing when no recipe is selected", async () => {
+      addRecipes.mockClear();
+      addRecipeDialog.value = true;
+      await addSelectedRecipe();
+      expect(addRecipes).not.toHaveBeenCalled();
+      expect(addRecipeDialog.value).toBe(true);
     });
   });
 });
