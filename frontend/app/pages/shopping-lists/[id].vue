@@ -70,6 +70,24 @@
       </v-card>
     </BaseDialog>
 
+    <!-- Add Recipe -->
+    <BaseDialog
+      v-model="addRecipeDialog"
+      :icon="$globals.icons.silverwareForkKnife"
+      :title="$t('shopping-list.add-recipe')"
+      :submit-icon="$globals.icons.createAlt"
+      :submit-text="$t('general.add')"
+      :submit-disabled="!selectedRecipe"
+      can-submit
+      @submit="addSelectedRecipe"
+      @close="selectedRecipe = null"
+    >
+      <RecipeSelector
+        v-model="selectedRecipe"
+        height="60vh"
+      />
+    </BaseDialog>
+
     <BasePageTitle divider class="shopping-list-title">
       <template #header>
         <v-container class="px-0">
@@ -90,6 +108,12 @@
             <BaseButtonGroup
               class="d-flex"
               :buttons="[
+                {
+                  icon: $globals.icons.silverwareForkKnife,
+                  text: $t('shopping-list.add-recipe'),
+                  event: 'add-recipe',
+                  disabled: isOffline,
+                },
                 ...(canSearch || isSearchOpen ? [{
                   icon: $globals.icons.search,
                   text: $t('search.search'),
@@ -138,6 +162,7 @@
                 },
               ]"
               @search="toggleSearch"
+              @add-recipe="addRecipeDialog = true"
               @edit="edit = true"
               @three-dot="threeDot = true"
               @check="openCheckAll"
@@ -383,6 +408,7 @@
 
 <script setup lang="ts">
 import { VueDraggable } from "vue-draggable-plus";
+import RecipeSelector from "~/components/Domain/Recipe/RecipeSelector.vue";
 import RecipeList from "~/components/Domain/Recipe/RecipeList.vue";
 import MultiPurposeLabelSection from "~/components/Domain/ShoppingList/MultiPurposeLabelSection.vue";
 import ShoppingListAddItemForm from "~/components/Domain/ShoppingList/ShoppingListAddItemForm.vue";
@@ -392,6 +418,7 @@ import { useShoppingListPage } from "~/composables/shopping-list-page/use-shoppi
 import { useLabelStore, useUnitStore, useFoodStore } from "~/composables/store";
 import { alert } from "~/composables/use-toast";
 import type { ShoppingListItemOut } from "~/lib/api/types/household";
+import type { RecipeSummary } from "~/lib/api/types/recipe";
 
 definePageMeta({
   middleware: ["auth"],
@@ -475,6 +502,19 @@ const {
   visibleCheckedCount,
   hasSearchResults,
 } = shoppingListPage;
+
+const addRecipeDialog = ref(false);
+const selectedRecipe = ref<RecipeSummary | null>(null);
+
+async function addSelectedRecipe() {
+  if (!selectedRecipe.value?.id) {
+    return;
+  }
+
+  await addRecipeReferenceToList(selectedRecipe.value.id);
+  addRecipeDialog.value = false;
+  selectedRecipe.value = null;
+}
 
 // Expand the checked section while searching, so an item that has already been
 // checked off can be found and unchecked without expanding the section by hand.
