@@ -1,4 +1,5 @@
 import type { ShoppingListOut } from "~/lib/api/types/household";
+import type { RecipeSummary } from "~/lib/api/types/recipe";
 import { useUserApi } from "~/composables/api";
 
 /**
@@ -11,6 +12,9 @@ export function useShoppingListRecipes(
   refresh: () => void,
 ) {
   const userApi = useUserApi();
+
+  const addRecipeDialog = ref(false);
+  const selectedRecipe = ref<RecipeSummary | null>(null);
 
   async function addRecipeReferenceToList(recipeId: string) {
     if (!shoppingList.value || recipeReferenceLoading.value) {
@@ -44,7 +48,21 @@ export function useShoppingListRecipes(
     }
   }
 
+  async function addSelectedRecipe() {
+    const recipeId = selectedRecipe.value?.id;
+    if (!recipeId) {
+      return;
+    }
+
+    await addRecipeReferenceToList(recipeId);
+    addRecipeDialog.value = false;
+    selectedRecipe.value = null;
+  }
+
   return {
+    addRecipeDialog,
+    selectedRecipe,
+    addSelectedRecipe,
     addRecipeReferenceToList,
     removeRecipeReferenceToList,
   };
